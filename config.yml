@@ -1,9 +1,15 @@
 version: 1
 accounts:
   - name: user1
-    coins: ["1000token", "100000000stake"]
+    coins: ["300000000trust"]
   - name: user2
-    coins: ["500token"]
+    coins: ["500trust"]
 validator:
   name: user1
-  staked: "100000000stake"
+  staked: "100000000trust"
+genesis:
+  chain_id: "trustchain"
+  app_state:
+    staking:
+      params:
+        bond_denom: "trust"
