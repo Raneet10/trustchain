@@ -22,10 +22,10 @@ func GetTxCmd(cdc *codec.Codec) *cobra.Command {
 	}
 
 	trustchainTxCmd.AddCommand(flags.PostCommands(
-    // this line is used by starport scaffolding # 1
+		// this line is used by starport scaffolding # 1
 		GetCmdCreatePromise(cdc),
-		GetCmdSetPromise(cdc),
-		GetCmdDeletePromise(cdc),
+		// GetCmdSetPromise(cdc),
+		// GetCmdDeletePromise(cdc),
 	)...)
 
 	return trustchainTxCmd
