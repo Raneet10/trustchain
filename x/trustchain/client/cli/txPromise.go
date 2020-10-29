@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bufio"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -22,6 +23,7 @@ func GetCmdCreatePromise(cdc *codec.Codec) *cobra.Command {
 			argsPromiseDescription := string(args[0])
 			argsPromiseKeeper := string(args[1])
 			argsReward := string(args[2])
+			argsDeadline := string(args[3])
 
 			promiseKeeper, err := sdk.AccAddressFromBech32(argsPromiseKeeper)
 			if err != nil {
@@ -33,10 +35,15 @@ func GetCmdCreatePromise(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
+			deadline, err := time.Parse("02.01.06 3:04:05", argsDeadline)
+			if err != nil {
+				return err
+			}
+
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
-			msg := types.NewMsgCreatePromise(cliCtx.GetFromAddress(), string(argsPromiseDescription), promiseKeeper, reward)
+			msg := types.NewMsgCreatePromise(cliCtx.GetFromAddress(), string(argsPromiseDescription), promiseKeeper, reward, deadline)
 			err = msg.ValidateBasic()
 			if err != nil {
 				return err

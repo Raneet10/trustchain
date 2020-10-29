@@ -5,15 +5,23 @@
       <sp-bank-balances />
       <sp-token-send />
       <!-- this line is used by starport scaffolding # 4 -->
-		<sp-type-form type="promise" :fields="['promiseDescription', 'promiseKeeper', 'reward', ]" module="trustchain" />
+
+      <promises-list type="promise" module="trustchain" :keeper="this.$store.state.cosmos.account.address" v-if="this.$store.state.cosmos.account.address != null" />
+
+	<sp-type-form type="promise" :fields="['promiseDescription', 'promiseKeeper', 'reward', 'deadline']" module="trustchain" />
     </div>
   </div>
 </template>
 
 <script>
-import * as sp from "@tendermint/vue";
+import {default as SpTypeForm} from "../components/SpTypeForm.vue";
+import {default as PromisesList} from "../components/PromisesList.vue";
+import {SpSignIn} from "@tendermint/vue";
+import {SpBankBalances} from "@tendermint/vue";
+import {SpTokenSend} from "@tendermint/vue";
+import {SpH3} from "@tendermint/vue";
 
 export default {
-  components: { ...sp },
+  components: { SpTypeForm, SpSignIn, SpBankBalances, SpTokenSend, SpH3, PromisesList },
 };
 </script>

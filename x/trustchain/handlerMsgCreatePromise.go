@@ -2,7 +2,6 @@ package trustchain
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/zeno-bg/trustchain/x/trustchain/keeper"
 	"github.com/zeno-bg/trustchain/x/trustchain/types"
@@ -15,12 +14,9 @@ func handleMsgCreatePromise(ctx sdk.Context, k keeper.Keeper, msg types.MsgCreat
 		PromiseDescription: msg.PromiseDescription,
 		PromiseKeeper:      msg.PromiseKeeper,
 		Reward:             msg.Reward,
-	}
-
-	moduleAccount := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
-	sdkError := k.CoinKeeper.SendCoins(ctx, promise.Creator, moduleAccount, promise.Reward)
-	if sdkError != nil {
-		return nil, sdkError
+		Deadline:           msg.Deadline,
+		Confirmed:          msg.Confirmed,
+		Kept:               msg.Kept,
 	}
 
 	k.CreatePromise(ctx, promise)

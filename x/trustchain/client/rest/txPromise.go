@@ -3,6 +3,7 @@ package rest
 import (
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -20,6 +21,7 @@ type createPromiseRequest struct {
 	PromiseDescription string       `json:"promiseDescription"`
 	PromiseKeeper      string       `json:"promiseKeeper"`
 	Reward             string       `json:"reward"`
+	Deadline           string       `json:"deadline"`
 }
 
 func createPromiseHandler(cliCtx context.CLIContext) http.HandlerFunc {
@@ -53,12 +55,55 @@ func createPromiseHandler(cliCtx context.CLIContext) http.HandlerFunc {
 
 		parsedPromiseDescription := req.PromiseDescription
 
+		deadlineParsed, err := strconv.ParseInt(req.Deadline, 10, 64)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		deadline := time.Unix(deadlineParsed/1000, 0)
+
 		msg := types.NewMsgCreatePromise(
 			creator,
 			parsedPromiseDescription,
 			promiseKeeper,
 			reward,
+			deadline,
 		)
+
+		err = msg.ValidateBasic()
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		utils.WriteGenerateStdTxResponse(w, cliCtx, baseReq, []sdk.Msg{msg})
+	}
+}
+
+type confirmPromiseRequest struct {
+	BaseReq rest.BaseReq `json:"base_req"`
+	Creator string       `json:"creator"`
+	ID      string       `json:"id"`
+}
+
+func confirmPromiseHandler(cliCtx context.CLIContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var req confirmPromiseRequest
+		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse request")
+			return
+		}
+		baseReq := req.BaseReq.Sanitize()
+		if !baseReq.ValidateBasic(w) {
+			return
+		}
+		creator, err := sdk.AccAddressFromBech32(req.Creator)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		msg := types.NewMsgConfirmPromise(creator, req.ID)
 
 		err = msg.ValidateBasic()
 		if err != nil {

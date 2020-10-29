@@ -1,6 +1,8 @@
 package types
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/google/uuid"
@@ -14,15 +16,21 @@ type MsgCreatePromise struct {
 	PromiseDescription string         `json:"promiseDescription" yaml:"promiseDescription"`
 	PromiseKeeper      sdk.AccAddress `json:"promiseKeeper" yaml:"promiseKeeper"`
 	Reward             sdk.Coins      `json:"reward" yaml:"reward"`
+	Deadline           time.Time      `json:"deadline" yaml:"deadline"`
+	Confirmed          bool           `json:"confirmed" yaml:"confirmed"`
+	Kept               bool           `json:"kept" yaml:"kept"`
 }
 
-func NewMsgCreatePromise(creator sdk.AccAddress, promiseDescription string, promiseKeeper sdk.AccAddress, reward sdk.Coins) MsgCreatePromise {
+func NewMsgCreatePromise(creator sdk.AccAddress, promiseDescription string, promiseKeeper sdk.AccAddress, reward sdk.Coins, deadline time.Time) MsgCreatePromise {
 	return MsgCreatePromise{
 		ID:                 uuid.New().String(),
 		Creator:            creator,
 		PromiseDescription: promiseDescription,
 		PromiseKeeper:      promiseKeeper,
 		Reward:             reward,
+		Deadline:           deadline,
+		Confirmed:          false,
+		Kept:               false,
 	}
 }
 
@@ -55,6 +63,9 @@ func (msg MsgCreatePromise) ValidateBasic() error {
 	}
 	if !msg.Reward.IsAllPositive() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, "reward can't be negative nor zero")
+	}
+	if msg.Deadline.IsZero() || msg.Deadline.Before(time.Now()) {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "deadline cannot be before now")
 	}
 	return nil
 }

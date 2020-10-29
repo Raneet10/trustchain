@@ -16,6 +16,14 @@ func (k Keeper) CreatePromise(ctx sdk.Context, promise types.Promise) {
 	store.Set(key, value)
 }
 
+// ConfirmPromise creates a promise
+func (k Keeper) ConfirmPromise(ctx sdk.Context, promise types.Promise) {
+	store := ctx.KVStore(k.storeKey)
+	key := []byte(types.PromisePrefix + promise.ID)
+	value := k.cdc.MustMarshalBinaryLengthPrefixed(promise)
+	store.Set(key, value)
+}
+
 // GetPromise returns the promise information
 func (k Keeper) GetPromise(ctx sdk.Context, key string) (types.Promise, error) {
 	store := ctx.KVStore(k.storeKey)
@@ -72,6 +80,27 @@ func getPromise(ctx sdk.Context, path []string, k Keeper) (res []byte, sdkError 
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
 
+	return res, nil
+}
+
+func listPromisesForKeeper(ctx sdk.Context, promiseKeeper string, k Keeper) ([]byte, error) {
+	var promiseList []types.Promise
+	store := ctx.KVStore(k.storeKey)
+	promiseKeeperAddress, err := sdk.AccAddressFromBech32(promiseKeeper)
+
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, err.Error())
+	}
+
+	iterator := sdk.KVStorePrefixIterator(store, []byte(types.PromisePrefix))
+	for ; iterator.Valid(); iterator.Next() {
+		var promise types.Promise
+		k.cdc.MustUnmarshalBinaryLengthPrefixed(store.Get(iterator.Key()), &promise)
+		if promise.PromiseKeeper.Equals(promiseKeeperAddress) {
+			promiseList = append(promiseList, promise)
+		}
+	}
+	res := codec.MustMarshalJSONIndent(k.cdc, promiseList)
 	return res, nil
 }
 
