@@ -8,6 +8,7 @@
           {{ value }}
         </div>
       </div>
+      <button class="btn button" v-on:click="confirmPromise(instance.id)">Confirm</button>
     </div>
     <div class="card__empty" v-if="instanceList.length < 1">
       There are no {{ type }} items yet. Create one using the form.
@@ -76,6 +77,20 @@ export default {
   components: {
     SpH3,
   },
+  methods: {
+    confirmPromise: async function(promiseId) {
+      const cosmos = this.$store.state.cosmos;
+      const chain_id = cosmos.chain_id;
+      const creator = cosmos.client.senderAddress;
+      const base_req = { chain_id, from: creator };
+      const body = {ID: promiseId};
+      const req = { base_req, creator, ...body };
+      console.log(req);
+      const module_name = cosmos.module || chain_id;
+      const { data } = await axios.post('http://127.0.0.1:1317/trustchain/promise/confirm', req);
+      console.log(data);
+    }
+ },
   mounted() {
     /* this.$store.dispatch("cosmos/entityFetch", {*/
     /*   type: this.type,*/

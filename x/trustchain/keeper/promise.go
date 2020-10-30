@@ -3,6 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/zeno-bg/trustchain/x/trustchain/types"
@@ -20,8 +21,19 @@ func (k Keeper) CreatePromise(ctx sdk.Context, promise types.Promise) {
 func (k Keeper) ConfirmPromise(ctx sdk.Context, promise types.Promise) {
 	store := ctx.KVStore(k.storeKey)
 	key := []byte(types.PromisePrefix + promise.ID)
-	value := k.cdc.MustMarshalBinaryLengthPrefixed(promise)
-	store.Set(key, value)
+
+	// This probably shouldnt be here
+
+	moduleAccount := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
+	sdkError := k.CoinKeeper.SendCoins(ctx, promise.Creator, moduleAccount, promise.Reward)
+
+	if sdkError != nil {
+		promise.Confirmed = true
+
+		value := k.cdc.MustMarshalBinaryLengthPrefixed(promise)
+		store.Set(key, value)
+	}
+
 }
 
 // GetPromise returns the promise information
@@ -86,7 +98,12 @@ func getPromise(ctx sdk.Context, path []string, k Keeper) (res []byte, sdkError 
 func listPromisesForKeeper(ctx sdk.Context, promiseKeeper string, k Keeper) ([]byte, error) {
 	var promiseList []types.Promise
 	store := ctx.KVStore(k.storeKey)
+
+	println(promiseKeeper)
+
 	promiseKeeperAddress, err := sdk.AccAddressFromBech32(promiseKeeper)
+
+	println("TEST")
 
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, err.Error())

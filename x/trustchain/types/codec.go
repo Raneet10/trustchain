@@ -8,6 +8,7 @@ import (
 func RegisterCodec(cdc *codec.Codec) {
 	// this line is used by starport scaffolding # 1
 	cdc.RegisterConcrete(MsgCreatePromise{}, "trustchain/CreatePromise", nil)
+	cdc.RegisterConcrete(MsgConfirmPromise{}, "trustchain/ConfirmPromise", nil)
 	// cdc.RegisterConcrete(MsgSetPromise{}, "trustchain/SetPromise", nil)
 	// cdc.RegisterConcrete(MsgDeletePromise{}, "trustchain/DeletePromise", nil)
 }

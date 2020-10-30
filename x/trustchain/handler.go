@@ -17,6 +17,8 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		// this line is used by starport scaffolding # 1
 		case types.MsgCreatePromise:
 			return handleMsgCreatePromise(ctx, k, msg)
+		case types.MsgConfirmPromise:
+			return handleMsgConfirmPromise(ctx, k, msg)
 		// case types.MsgSetPromise:
 		//     return handleMsgSetPromise(ctx, k, msg)
 		// case types.MsgDeletePromise:
