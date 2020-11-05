@@ -82,9 +82,11 @@ func createPromiseHandler(cliCtx context.CLIContext) http.HandlerFunc {
 }
 
 type confirmPromiseRequest struct {
-	BaseReq rest.BaseReq `json:"base_req"`
-	Creator string       `json:"creator"`
-	ID      string       `json:"id"`
+	BaseReq   rest.BaseReq `json:"base_req"`
+	Creator   string       `json:"creator"`
+	Fulfiller string       `json:"fulfiller"`
+	Reward    string       `json:"reward"`
+	ID        string       `json:"id"`
 }
 
 func confirmPromiseHandler(cliCtx context.CLIContext) http.HandlerFunc {
@@ -104,7 +106,19 @@ func confirmPromiseHandler(cliCtx context.CLIContext) http.HandlerFunc {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
-		msg := types.NewMsgConfirmPromise(creator, req.ID)
+
+		fulfiller, err := sdk.AccAddressFromBech32(req.Fulfiller)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		reward, err := sdk.ParseCoins(req.Reward)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		msg := types.NewMsgConfirmPromise(creator, fulfiller, reward, req.ID)
 
 		err = msg.ValidateBasic()
 		if err != nil {

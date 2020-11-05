@@ -1,8 +1,10 @@
 package trustchain
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/zeno-bg/trustchain/x/trustchain/keeper"
 	"github.com/zeno-bg/trustchain/x/trustchain/types"
 )
@@ -21,6 +23,20 @@ func handleMsgConfirmPromise(ctx sdk.Context, k keeper.Keeper, msg types.MsgConf
 		return nil, nil //TODO print error
 	}
 
+	if !k.GetPromiseReward(ctx, msg.PromiseId).IsEqual(msg.Reward) {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, "Incorrect Reward Amount")
+	}
+
+	if k.GetPromiseDeadline(ctx, msg.PromiseId).Before(time.Now()) {
+		//Deadline exceeded error
+		return nil, nil
+	}
+
+	err = k.CoinKeeper.SendCoins(ctx, msg.Creator, msg.Fulfiller, msg.Reward)
+
+	if err != nil {
+		return nil, err
+	}
 	k.ConfirmPromise(ctx, promise)
 
 	ctx.EventManager().EmitEvent(
